@@ -156,35 +156,12 @@ $(KERNEL_BIN): $(KERNEL_ELF)
 	@echo $(KERNEL_BIN)
 	$(call color_progress_prefix, "Size")
 	$(call disk_usage_KiB, $(KERNEL_BIN))
-
-##------------------------------------------------------------------------------
-## Generate the documentation
-##------------------------------------------------------------------------------
-doc:
-	$(call color_header, "Generating docs")
-	@$(DOC_CMD) --document-private-items --open
-
 ##------------------------------------------------------------------------------
 ## Run the kernel in QEMU
 ##------------------------------------------------------------------------------
-ifeq ($(QEMU_MACHINE_TYPE),) # QEMU is not supported for the board.
-
-qemu:
-	$(call color_header, "$(QEMU_MISSING_STRING)")
-
-else # QEMU is supported.
-
 qemu: $(KERNEL_BIN)
 	$(call color_header, "Launching QEMU")
 	@$(DOCKER_QEMU) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
-
-endif
-
-##------------------------------------------------------------------------------
-## Push the kernel to the real HW target
-##------------------------------------------------------------------------------
-chainboot: $(KERNEL_BIN)
-	@$(DOCKER_CHAINBOOT) $(EXEC_MINIPUSH) $(DEV_SERIAL) $(KERNEL_BIN)
 
 ##------------------------------------------------------------------------------
 ## Run clippy
@@ -223,55 +200,3 @@ nm: $(KERNEL_ELF)
 	@$(DOCKER_TOOLS) $(NM_BINARY) --demangle --print-size $(KERNEL_ELF) | sort | rustfilt
 
 
-
-##--------------------------------------------------------------------------------------------------
-## Debugging targets
-##--------------------------------------------------------------------------------------------------
-.PHONY: jtagboot openocd gdb gdb-opt0
-
-##------------------------------------------------------------------------------
-## Push the JTAG boot image to the real HW target
-##------------------------------------------------------------------------------
-jtagboot:
-	@$(DOCKER_JTAGBOOT) $(EXEC_MINIPUSH) $(DEV_SERIAL) $(JTAG_BOOT_IMAGE)
-
-##------------------------------------------------------------------------------
-## Start OpenOCD session
-##------------------------------------------------------------------------------
-openocd:
-	$(call color_header, "Launching OpenOCD")
-	@$(DOCKER_OPENOCD) openocd $(OPENOCD_ARG)
-
-##------------------------------------------------------------------------------
-## Start GDB session
-##------------------------------------------------------------------------------
-gdb: RUSTC_MISC_ARGS += -C debuginfo=2
-gdb-opt0: RUSTC_MISC_ARGS += -C debuginfo=2 -C opt-level=0
-gdb gdb-opt0: $(KERNEL_ELF)
-	$(call color_header, "Launching GDB")
-	@$(DOCKER_GDB) gdb-multiarch -q $(KERNEL_ELF)
-
-
-
-##--------------------------------------------------------------------------------------------------
-## Testing targets
-##--------------------------------------------------------------------------------------------------
-.PHONY: test test_boot
-
-ifeq ($(QEMU_MACHINE_TYPE),) # QEMU is not supported for the board.
-
-test_boot test:
-	$(call color_header, "$(QEMU_MISSING_STRING)")
-
-else # QEMU is supported.
-
-##------------------------------------------------------------------------------
-## Run boot test
-##------------------------------------------------------------------------------
-test_boot: $(KERNEL_BIN)
-	$(call color_header, "Boot test - $(BSP)")
-	@$(DOCKER_TEST) $(EXEC_TEST_DISPATCH) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
-
-test: test_boot
-
-endif

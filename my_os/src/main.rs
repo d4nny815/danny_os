@@ -56,8 +56,8 @@ fn kernel_main() -> ! {
 
     print_boot_screen();
 
-    for _ in 0..10 {
-        info!("Spinning for 1 second");
+    for run in 1..=5 {
+        info!("Run {} - Spinning for 1 second", run);
         timer::time_manager().spin_for(Duration::from_secs(1));
     }
 
