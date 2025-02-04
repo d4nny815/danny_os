@@ -21,13 +21,11 @@ unsafe fn prep_el2_to_el1_trans(phys_boot_core_stack_end_exclusive_addr: u64) {
     // set EL1 to op in Aarch64 mode
     HCR_EL2.write(HCR_EL2::RW::EL1IsAarch64);
 
-    // FIXME: prob gonna have to remove this
-    // set up simulated return
     SPSR_EL2.write(
-        SPSR_EL2::D::Masked
-            + SPSR_EL2::A::Masked
+        SPSR_EL2::D::Unmasked
+            + SPSR_EL2::A::Unmasked
             + SPSR_EL2::I::Unmasked
-            + SPSR_EL2::F::Masked
+            + SPSR_EL2::F::Unmasked
             + SPSR_EL2::M::EL1h,
     );
 
