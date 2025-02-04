@@ -97,6 +97,4 @@ fn print_boot_screen() {
 
     // Test a failing timer case.
     timer::time_manager().spin_for(Duration::from_nanos(1));
-
-    return;
 }

@@ -37,6 +37,6 @@ impl<T> interface::Mutex for SpinLock<T> {
         // mutable reference will ever only be given out once at a time.
         let data = unsafe { &mut *self.data.get() }; // get pointer to item
 
-        return f(data); // return the function's result from the data
+        f(data) // return the function's result from the data
     }
 }

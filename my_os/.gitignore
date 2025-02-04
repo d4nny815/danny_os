@@ -1,2 +1,4 @@
 target/
 .vscode/
+kernel_dump
+kernel_elf
