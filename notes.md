@@ -54,6 +54,41 @@
 
 
 # Virtual Memory
+- Generic Kernel Code
+    - descriptor types for different parts of memory
+        - R/W, no-exec, un/cached
+    - indepentant of the actual MMU's descriptors
+- BSP Code
+    - Contains `KernelVirtualLayout`, stores the high-level descriptors
+    - This is here since the BSP has knows the board's memory map
+    - Only describe regions that are **not** ordinary, normal cacheable DRAM
+    - `KernelVirtualLayout` implements a property's function
+        - used by the arch code to get properties for translation, and returns the phyiscal addr
+        - The function scans for a descriptor that contains the queried address, and returns the respective findings for the first entry that is a hit. 
+        - If no entry is found, it returns default attributes for normal cacheable DRAM and the input address, hence telling the MMU code that the requested address should be identity mapped
+- Arch Specific Code
+    - contains the aarch64 MMU driver
+    - defines the page granule size (64 KB)
+        - 16b offset for addressing inside a page.
+        - 13b for indexing into L3 PT
+        - 13b for indexing into L2 PT
+        -  only a small amount of bits will actually be used
+        - 9b for indexing in L1 PT
+            - wont be used
+        - 48-bit virtual address space for indexing.
+    - Page Table (PT)
+        - 8B (64-bit) per entry
+        - each PT contains 8K entries 
+    - LVL3 Page Table (L3 PT)
+        - each entry maps 64 KB
+        - Full PT covers 512MB
+            - 8K * 64KB
+        - L3 PT points directly to a page in physical mem
+    - LVL2 Page Table (L2 PT)
+        - each entry points to an L3 PT.
+        - Full PT covers 4TB
+            - 8K * 512MB
+
 - Static Translation Table
 
 
